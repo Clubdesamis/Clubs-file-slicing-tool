@@ -1,4 +1,4 @@
-compiler-path=C:/msys64/mingw64
+compiler-path=C:\msys64\mingw64
 name=Clubware
 output-path=out
 flags=-lsdl2 -lsdl2_image -lsdl2_ttf
