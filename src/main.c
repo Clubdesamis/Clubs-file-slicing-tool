@@ -1,76 +1,90 @@
 #define SDL_MAIN_HANDLED
-#include <stdio.h>
-#include <stdbool.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <time.h>
-//#include <SDL2/SDL_ttf.h>
+#include "common/common.h"
+#include <dirent.h>
 
 #define WIDTH 800
 #define HEIGHT 600
+#define MAX_FILE_SIZE 10000000
+
 
 int main(int argc, char** argv){
 
+
+    FILE* file = NULL;
+    uint64_t fileSize = 0;
+    char* content = NULL;
+    char** subFiles = NULL;
+    int subFileCount = 0;
+
+    //ouvrir le fichier
+    file = fopen("inputComplete/file.txt", "r");
+    fseek(file, 0, SEEK_END);
+    //trouver la taille du fichier
+    fileSize = ftell(file);
+    fseek(file, 0, SEEK_SET);
+    //allocate un tableau pour le contenu du fichier
+    content = malloc(fileSize * sizeof(char));
+    fgets(content, fileSize, file);
+
+    subFileCount = (fileSize + MAX_FILE_SIZE - 1) / MAX_FILE_SIZE;
+    subFiles = malloc(subFileCount * sizeof(char*));
+
+    for(int i = 0; i < subFileCount; i++){
+        subFiles[i] = (char*)malloc(MAX_FILE_SIZE * sizeof(char));
+    }
+
+    
+
+
+    
+
+
+
+
+
+
+
+
     bool runs = true;
-    SDL_Window* window;
-    SDL_Renderer* renderer;
+
     SDL_Texture* image;
     char windowTitle[32];
-
-    //TTF_Font* font = TTF_OpenFont("Sans.ttf", 24);
-    //SDL_Surface* FpsLabelSurface = TTF_RenderText_Solid(font, "FPS: ", (SDL_Color){0, 255, 0});
-    //SDL_Surface* FpsIndicatorSurface = TTF_RenderText_Solid(font, "", (SDL_Color){0, 255, 0});
-    //SDL_Texture* FpsLabelTexture = SDL_CreateTextureFromSurface(renderer, FpsLabelSurface);
-    //SDL_Texture* FpsIndicatorTexture = SDL_CreateTextureFromSurface(renderer, FpsIndicatorSurface);
-    //SDL_Rect FpsLabelRect;
-    //SDL_Rect FpsIndicatorRect;
+    common_startup();
+    TTF_Font* font = TTF_OpenFont("ressources/fonts/OpenSans-Light.ttf", 24);
+    SDL_Surface* FpsLabelSurface = TTF_RenderText_Solid(font, "FPS: ", (SDL_Color){.r = 0, .g = 255, .b = 0, .a = 255});
+    SDL_Texture* FpsLabelTexture = SDL_CreateTextureFromSurface(renderer, FpsLabelSurface);
+    SDL_Rect FpsLabelRect;
     SDL_Rect fumoRect;
     int width = 0, height = 0;
     struct timespec res;
     long tickS, tickSOld, tickSSinceUpdate, tickNS, tickNSOld, tickNSSinceUpdate;
-
     clock_gettime(CLOCK_REALTIME, &res);
     tickNSOld = res.tv_nsec;
     tickNS = res.tv_nsec;
     tickNSSinceUpdate = res.tv_nsec;
 
-    if(SDL_Init(SDL_INIT_EVERYTHING) < 0){
-        return 1;
-    }
-
-    IMG_Init(IMG_INIT_PNG|IMG_INIT_JPG);
-
-    window = SDL_CreateWindow(windowTitle, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, 0);
-    renderer = SDL_CreateRenderer(window, -1, 0);
     image = IMG_LoadTexture(renderer, "./fumo.png");
     SDL_QueryTexture(image, NULL, NULL, &width, &height);
-
     fumoRect.x = WIDTH / 2;
     fumoRect.y = HEIGHT / 2;
-    fumoRect.w = width;
-    fumoRect.h = height;
-
-    //FpsLabelRect.x = 20;
-    //FpsLabelRect.y = 20;
-    //SDL_QueryTexture(FpsLabelTexture, NULL, NULL, &FpsLabelRect.w, &FpsLabelRect.h);
-
-    //FpsIndicatorRect.x = 160;
-    //FpsIndicatorRect.y = 20;
-    //SDL_QueryTexture(FpsLabelTexture, NULL, NULL, &FpsIndicatorRect.w, &FpsIndicatorRect.h);
+    fumoRect.w = width/2;
+    fumoRect.h = height/2;
+    FpsLabelRect.x = 20;
+    FpsLabelRect.y = 20;
+    FpsLabelRect.w = FpsLabelSurface->w;
+    FpsLabelRect.h = FpsLabelSurface->h;
     
     sprintf(windowTitle, "FPS: %i", 0);
     SDL_SetWindowTitle(window, windowTitle);
 
-
-
     while(runs){
+
+        printf("Ouais allo bassem");
         
         clock_gettime(CLOCK_REALTIME, &res);
         tickNS = res.tv_nsec;
         tickS = res.tv_sec;
-        //printf("%ld\n", ticks);
         if((tickS * 1000000000 + tickNS) - (tickSSinceUpdate * 1000000000 + tickNSSinceUpdate) >= 500000000){
-            //printf("fps updates");
             sprintf(windowTitle, "FPS: %i", 1000000000 / (tickNS - tickNSOld));
             SDL_SetWindowTitle(window, windowTitle);
             tickSSinceUpdate = tickS;
@@ -113,14 +127,20 @@ int main(int argc, char** argv){
 
         SDL_RenderClear(renderer);
 
+        
+
+
         SDL_RenderCopy(renderer, image, NULL, &fumoRect);
-        //SDL_RenderCopy(renderer, FpsLabelTexture, NULL, &FpsLabelRect);
-        //SDL_RenderCopy(renderer, FpsIndicatorTexture, NULL, &FpsIndicatorRect);
+ 
+
+
+        SDL_RenderCopy(renderer, FpsLabelTexture, NULL, &FpsLabelRect);
 
         SDL_RenderPresent(renderer);
     }
 
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
+    common_shutdown();
+
+
     return 0;
 }
